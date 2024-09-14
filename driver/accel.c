@@ -53,6 +53,11 @@ PARAM_F(SensitivityCap, SENS_CAP,           "Cap maximum sensitivity.");
 PARAM_F(Offset,         OFFSET,             "Mouse base sensitivity.");
 PARAM_F(Exponent,       EXPONENT,           "Exponent for algorithms that use it"); 
 PARAM_F(Midpoint,       MIDPOINT,           "Midpoint for sigmoid function"); 
+PARAM_F(Domain_X,       DOMAIN_X,           "X Domain multiplyer");
+PARAM_F(Domain_Y,       DOMAIN_Y,           "Y Domain multiplyer");
+PARAM_F(Range_X,        RANGE_X,            "X Range multiplyer");
+PARAM_F(Range_Y,        RANGE_Y,           "Y Range multiplyer");
+
 //PARAM_F(AngleAdjustment,XXX,            "");           //Not yet implemented. Douptful, if I will ever add it - Not very useful and needs me to implement trigonometric functions from scratch in C.
 //PARAM_F(AngleSnapping,  XXX,            "");           //Not yet implemented. Douptful, if I will ever add it - Not very useful and needs me to implement trigonometric functions from scratch in C.
 PARAM_F(ScrollsPerTick, SCROLLS_PER_TICK,   "Amount of lines to scroll per scroll-wheel tick.");
@@ -79,6 +84,10 @@ INLINE void updata_params(ktime_t now)
     PARAM_UPDATE(ScrollsPerTick);
     PARAM_UPDATE(Exponent);
     PARAM_UPDATE(Midpoint);
+    PARAM_UPDATE(Domain_X);
+    PARAM_UPDATE(Domain_Y);
+    PARAM_UPDATE(Range_X);
+    PARAM_UPDATE(Range_Y);
 }
 
 // ########## Acceleration code
@@ -134,6 +143,10 @@ kernel_fpu_begin();
         printk("LEETMOUSE: First float-trap triggered. Should very very rarely happen, if at all");
         goto exit;
     }
+
+    //Multiply by Domain and Range
+    delta_x *= g_Domain_X; delta_x *= g_Range_X;
+    delta_y *= g_Domain_Y; delta_y *= g_Range_Y;
 
     //Add buffer values, if present, and reset buffer
     delta_x += (float) buffer_x; buffer_x = 0;
@@ -236,6 +249,11 @@ kernel_fpu_begin();
     //Like RawAccel, sensitivity will be a final multiplier:
     delta_x *= g_Sensitivity;
     delta_y *= g_Sensitivity;
+
+    //Divide by Domain
+
+    delta_x /= g_Domain_X;
+    delta_y /= g_Domain_Y;
 
     delta_x += carry_x;
     delta_y += carry_y;
