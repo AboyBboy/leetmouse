@@ -145,9 +145,9 @@ kernel_fpu_begin();
         goto exit;
     }
 
-    //Multiply by Domain and Range
-    delta_x *= g_Domain_X; delta_x *= g_Range_X;
-    delta_y *= g_Domain_Y; delta_y *= g_Range_Y;
+    //Multiply by Domain
+    delta_x *= g_Domain_X;
+    delta_y *= g_Domain_Y;
 
     //Add buffer values, if present, and reset buffer
     delta_x += (float) buffer_x; buffer_x = 0;
@@ -249,6 +249,10 @@ kernel_fpu_begin();
     //Divide by Domain
     delta_x /= g_Domain_X;
     delta_y /= g_Domain_Y;
+
+    //Multiply by Range
+    delta_x *= g_Range_X;
+    delta_y *= g_Range_Y;
 
     delta_x += carry_x;
     delta_y += carry_y;
