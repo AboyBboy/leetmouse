@@ -22,12 +22,11 @@ MODULE_AUTHOR("Klaus Zipfel <klaus (at) zipfel (dot) family>");         //Curren
 
 //Converts a preprocessor define's value in "config.h" to a string - Suspect this to change in future version without a "config.h"
 #define _s(x) #x
-#define s(x) _s(x)
 
 //Convenient helper for float based parameters, which are passed via a string to this module (must be individually parsed via atof() - available in util.c)
 #define PARAM_F(param, default, desc)                           \
     float g_##param = default;                                  \
-    static char* g_param_##param = s(default);                  \
+    static char* g_param_##param = _s(default);                  \
     module_param_named(param, g_param_##param, charp, 0644);    \
     MODULE_PARM_DESC(param, desc);
 
@@ -53,6 +52,7 @@ PARAM_F(SensitivityCap, SENS_CAP,           "Cap maximum sensitivity.");
 PARAM_F(Offset,         OFFSET,             "Mouse base sensitivity.");
 PARAM_F(Exponent,       EXPONENT,           "Exponent for algorithms that use it"); 
 PARAM_F(Midpoint,       MIDPOINT,           "Midpoint for sigmoid function"); 
+
 PARAM_F(Domain_X,       DOMAIN_X,           "X Domain multiplyer");
 PARAM_F(Domain_Y,       DOMAIN_Y,           "Y Domain multiplyer");
 PARAM_F(Range_X,        RANGE_X,            "X Range multiplyer");
@@ -84,6 +84,7 @@ INLINE void updata_params(ktime_t now)
     PARAM_UPDATE(ScrollsPerTick);
     PARAM_UPDATE(Exponent);
     PARAM_UPDATE(Midpoint);
+
     PARAM_UPDATE(Domain_X);
     PARAM_UPDATE(Domain_Y);
     PARAM_UPDATE(Range_X);
@@ -125,7 +126,7 @@ int accelerate(int *x, int *y, int *wheel)
 //Not doing this caused the FPU state to get randomly screwed up (https://github.com/systemofapwne/leetmouse/issues/4), making the cursor to get stuck on the left screen. Especially when playing certain videos in the browser.
 kernel_fpu_begin();
     accel_sens = g_Sensitivity;
-
+    
     delta_x = (float) (*x);
     delta_y = (float) (*y);
     delta_whl = (float) (*wheel);
@@ -164,6 +165,10 @@ kernel_fpu_begin();
     //Update acceleration parameters periodically
     updata_params(now);
 
+    //Divide delta by domain before acceleration is applied
+    delta_x /= g_DomainX;
+    delta_y /= g_DomainY;
+
     //Get distance traveled
     speed = delta_x * delta_x + delta_y * delta_y;
     B_sqrt(&speed);
@@ -198,15 +203,6 @@ kernel_fpu_begin();
 
         //Motivity (Sigmoid function)
         if(g_AccelerationMode == 3) {
-            // Acceleration / ( 1 + e ^ (midpoint - x))
-            /*
-            product =  g_Midpoint-speed;
-            motivity = e;
-            B_pow(&motivity, &product);
-            motivity = g_Acceleration / (1 + motivity);
-            speed = motivity;
-            */
-
             //lg = e^exponent, exponent == "growth rate"
             lg = g_Exponent;
             B_exp(&lg);
