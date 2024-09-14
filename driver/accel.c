@@ -95,8 +95,8 @@ INLINE void updata_params(ktime_t now)
 // Acceleration happens here
 int accelerate(int *x, int *y, int *wheel)
 {
-	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, lg, lm, lim, inner;
-    float e = 2.71828f;
+	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, lg, lm, lim;
+    // float e = 2.71828f;
     static long buffer_x = 0;
     static long buffer_y = 0;
     static long buffer_whl = 0;
@@ -251,7 +251,6 @@ kernel_fpu_begin();
     delta_y *= g_Sensitivity;
 
     //Divide by Domain
-
     delta_x /= g_Domain_X;
     delta_y /= g_Domain_Y;
 
