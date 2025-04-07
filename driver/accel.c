@@ -166,8 +166,8 @@ kernel_fpu_begin();
     updata_params(now);
 
     //Divide delta by domain before acceleration is applied
-    delta_x /= g_DomainX;
-    delta_y /= g_DomainY;
+    delta_x /= g_Domain_X;
+    delta_y /= g_Domain_Y;
 
     //Get distance traveled
     speed = delta_x * delta_x + delta_y * delta_y;
