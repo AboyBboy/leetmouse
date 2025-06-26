@@ -5,6 +5,7 @@ set -e
 
 DRIVER=leetmouse
 DRIVER_PATH=/sys/bus/usb/drivers/$DRIVER
+DEVICES=( "5-2:1.0" )
 
 # No argument has been passed over. Exit
 if [ $# -eq 0 ]; then
@@ -24,16 +25,24 @@ if [ $1 == "unbind_all" ]; then
     # Temporarily disable binding via udev to leetmouse
     echo -ne "1" > /sys/module/leetmouse/parameters/no_bind
 
-    for d in $DRIVER_PATH/*/ ; do
-        # Strip basepath and trailing/leading slashes
-        d=${d#$DRIVER_PATH}
-        d=${d:1:-1}
+#     for d in $DRIVER_PATH/*/ ; do
+#         # Strip basepath and trailing/leading slashes
+#         d=${d#$DRIVER_PATH}
+#         d=${d:1:-1}
+# 
+#         if [ $d != "module" ]; then
+#             echo -e "$d" > /sys/bus/usb/drivers/leetmouse/unbind
+#             echo -e "$d" > /sys/bus/usb/drivers/usbhid/bind
+#         fi
+#     done
 
-        if [ $d != "module" ]; then
-            echo -e "$d" > /sys/bus/usb/drivers/leetmouse/unbind
-            echo -e "$d" > /sys/bus/usb/drivers/usbhid/bind
-        fi
-    done
+     for DEVICE in "${DEVICES[@]}"; do
+         echo "Rebinding $DEVICE"
+         echo -n "$DEVICE" > /sys/bus/usb/drivers/usbhid/unbind
+         echo -n "$DEVICE" > /sys/bus/usb/drivers/leetmouse/bind
+     done
+
+
 
     # Reenable binding to leetmouse via udev after all pointer devices successfully have attached to usbhid again
     sleep 2
