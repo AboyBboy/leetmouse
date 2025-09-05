@@ -52,10 +52,12 @@ PARAM_F(SensitivityCap, SENS_CAP,           "Cap maximum sensitivity.");
 PARAM_F(Offset,         OFFSET,             "Mouse base sensitivity.");
 PARAM_F(Exponent,       EXPONENT,           "Exponent for algorithms that use it"); 
 PARAM_F(Midpoint,       MIDPOINT,           "Midpoint for sigmoid function"); 
-PARAM_F(DomainX,        DOMAIN_X,           "Domain of X"); 
-PARAM_F(DomainY,        DOMAIN_Y,           "Domain of Y"); 
-PARAM_F(RangeX,         RANGE_X,            "Range of X"); 
-PARAM_F(RangeY,         RANGE_Y,            "Range of Y"); 
+
+PARAM_F(Domain_X,       DOMAIN_X,           "X Domain multiplyer");
+PARAM_F(Domain_Y,       DOMAIN_Y,           "Y Domain multiplyer");
+PARAM_F(Range_X,        RANGE_X,            "X Range multiplyer");
+PARAM_F(Range_Y,        RANGE_Y,           "Y Range multiplyer");
+
 //PARAM_F(AngleAdjustment,XXX,            "");           //Not yet implemented. Douptful, if I will ever add it - Not very useful and needs me to implement trigonometric functions from scratch in C.
 //PARAM_F(AngleSnapping,  XXX,            "");           //Not yet implemented. Douptful, if I will ever add it - Not very useful and needs me to implement trigonometric functions from scratch in C.
 PARAM_F(ScrollsPerTick, SCROLLS_PER_TICK,   "Amount of lines to scroll per scroll-wheel tick.");
@@ -82,10 +84,11 @@ INLINE void updata_params(ktime_t now)
     PARAM_UPDATE(ScrollsPerTick);
     PARAM_UPDATE(Exponent);
     PARAM_UPDATE(Midpoint);
-    PARAM_UPDATE(DomainX);
-    PARAM_UPDATE(DomainY);
-    PARAM_UPDATE(RangeX);
-    PARAM_UPDATE(RangeY);
+
+    PARAM_UPDATE(Domain_X);
+    PARAM_UPDATE(Domain_Y);
+    PARAM_UPDATE(Range_X);
+    PARAM_UPDATE(Range_Y);
 }
 
 // ########## Acceleration code
@@ -93,8 +96,8 @@ INLINE void updata_params(ktime_t now)
 // Acceleration happens here
 int accelerate(int *x, int *y, int *wheel)
 {
-	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, 
-	    lg, lm, lim;
+	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, lg, lm, lim;
+    // float e = 2.71828f;
     static long buffer_x = 0;
     static long buffer_y = 0;
     static long buffer_whl = 0;
@@ -142,6 +145,10 @@ kernel_fpu_begin();
         goto exit;
     }
 
+    //Multiply by Domain
+    delta_x *= g_Domain_X;
+    delta_y *= g_Domain_Y;
+
     //Add buffer values, if present, and reset buffer
     delta_x += (float) buffer_x; buffer_x = 0;
     delta_y += (float) buffer_y; buffer_y = 0;
@@ -159,8 +166,8 @@ kernel_fpu_begin();
     updata_params(now);
 
     //Divide delta by domain before acceleration is applied
-    delta_x /= g_DomainX;
-    delta_y /= g_DomainY;
+    delta_x /= g_Domain_X;
+    delta_y /= g_Domain_Y;
 
     //Get distance traveled
     speed = delta_x * delta_x + delta_y * delta_y;
@@ -239,11 +246,13 @@ kernel_fpu_begin();
     delta_x *= g_Sensitivity;
     delta_y *= g_Sensitivity;
 
-    //Multiply by both domain and range
-    delta_x *= g_DomainX;
-    delta_y *= g_DomainY;
-    delta_x *= g_RangeX;
-    delta_y *= g_RangeY;
+    //Divide by Domain
+    delta_x /= g_Domain_X;
+    delta_y /= g_Domain_Y;
+
+    //Multiply by Range
+    delta_x *= g_Range_X;
+    delta_y *= g_Range_Y;
 
     delta_x += carry_x;
     delta_y += carry_y;

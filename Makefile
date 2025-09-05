@@ -72,7 +72,7 @@ udev_trigger:
 	@echo -e "\n::\033[34m Triggering new udev rules\033[0m"
 	@echo "====================================================="
 	udevadm control --reload-rules
-	udevadm trigger --subsystem-match=usb --subsystem-match=input --subsystem-match=hid --attr-match=bInterfaceClass=03 --attr-match=bInterfaceSubClass=01 --attr-match=bInterfaceProtocol=02
+	udevadm trigger --subsystem-match=usb --subsystem-match=input --subsystem-match=hid --attr-match=bInterfaceClass=05 --attr-match=bInterfaceSubClass=02 --attr-match=bInterfaceProtocol=01
 
 udev_uninstall:
 	@echo -e "\n::\033[34m Uninstalling leetmouse udev rules\033[0m"
